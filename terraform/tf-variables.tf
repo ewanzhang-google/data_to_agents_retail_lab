@@ -104,7 +104,7 @@ variable "bigquery_chocoate_ai_dataset" {
   default     = "chocolate_ai"
   validation {
     condition     = length(var.bigquery_chocoate_ai_dataset) > 0
-    error_message = "The bigquery dataset curated is required."
+    error_message = "The bigquery data dataset is required."
   }
 }
 
@@ -255,7 +255,7 @@ locals {
   local_project_id = var.project_number == "" ? "${var.project_id}-${random_string.project_random.result}" : var.project_id
 
   # Apply suffix to bucket so the name is unique
-  chocoate_ai_bucket = "chocolate-ai-curated-${random_string.project_random.result}"
+  chocoate_ai_bucket = "chocolate-ai-data-${random_string.project_random.result}"
   code_bucket = "chocolate-ai-code-${random_string.project_random.result}"
   dataflow_staging_bucket = "dataflow-staging-${random_string.project_random.result}"
 

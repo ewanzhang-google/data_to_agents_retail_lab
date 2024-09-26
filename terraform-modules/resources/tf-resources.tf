@@ -213,7 +213,7 @@ resource "google_bigquery_dataset" "google_bigquery_dataset_chocoate_ai" {
   project       = var.project_id
   dataset_id    = var.bigquery_chocoate_ai_dataset
   friendly_name = var.bigquery_chocoate_ai_dataset
-  description   = "This dataset contains the curated data for the Chocolate A.I. demo."
+  description   = "This dataset contains the data for the Chocolate A.I. demo."
   location      = var.multi_region
 }
 

@@ -18,7 +18,7 @@
 CREATE RESERVATION `data-analytics-preview.region-us.continuous-query-reservation`
 OPTIONS (
   edition = "enterprise",
-  slot_capacity = 100);
+  slot_capacity = 50);
 
 
 CREATE ASSIGNMENT `data-analytics-preview.region-us.continuous-query-reservation.continuous-query-reservation-assignment`
@@ -56,6 +56,9 @@ FROM `data-analytics-preview.chocolate_ai.customer_geo_location`;
 */
 
 
+----------------------------------------------------------------------------------------------------------------
+-- Insert the customers who break the geo-boundry into Pub/Sub and then a process (e.g. Cloud Function) will send them an alert
+----------------------------------------------------------------------------------------------------------------
 EXPORT DATA OPTIONS(uri="https://pubsub.googleapis.com/projects/data-analytics-preview/topics/bq-continuous-query", format="cloud_pubsub") AS 
 WITH raw_data AS (
   SELECT *
@@ -93,5 +96,51 @@ SELECT TO_JSON_STRING(STRUCT(customer_geo_location_id,
                              km_to_dest_distance,
                              debug_map_url)) AS message,
       TO_JSON(STRUCT(CAST(TIMESTAMP_MILLIS(event_timestamp_millis) AS STRING) AS event_timestamp)) AS _ATTRIBUTES
+  FROM results
+  where entered_geofence = true;
+
+
+
+----------------------------------------------------------------------------------------------------------------
+-- Insert the customers who break the geo-boundry into another BigQuery table
+----------------------------------------------------------------------------------------------------------------
+INSERT INTO `data-analytics-preview.chocolate_ai.customer_geo_location_results`
+WITH raw_data AS (
+  SELECT *
+  FROM `data-analytics-preview.chocolate_ai.customer_geo_location`
+)
+, geo_data AS (
+  SELECT *,
+         ST_DISTANCE(
+          ST_GEOGPOINT(prior_longitude, prior_latitude),
+          ST_GEOGPOINT(current_longitude, current_latitude)
+         ) AS meters_travel_since_prior_distance,
+         ST_DISTANCE(
+          ST_GEOGPOINT(current_longitude, current_latitude),
+          ST_GEOGPOINT(debug_destination_longitude, debug_destination_latitude)
+         ) AS meters_to_dest_distance,
+         ST_DISTANCE(
+          ST_GEOGPOINT(current_longitude, current_latitude),
+          ST_GEOGPOINT(debug_destination_longitude, debug_destination_latitude)
+         ) / 1000 AS km_to_dest_distance,
+  FROM raw_data
+)
+, results AS (
+  SELECT *,
+         CASE WHEN meters_to_dest_distance > 1000
+               AND meters_to_dest_distance - meters_travel_since_prior_distance < 1000
+              THEN TRUE
+              ELSE FALSE
+          END AS entered_geofence
+  FROM geo_data
+)
+SELECT customer_geo_location_id,
+       customer_id,
+       current_latitude,
+       current_longitude,
+       km_to_dest_distance,
+       debug_map_url,
+       event_timestamp_millis,
+       CURRENT_TIMESTAMP() AS geo_boundry_entry_timestamp
   FROM results
   where entered_geofence = true;

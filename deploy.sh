@@ -54,7 +54,7 @@ then
 else
   org_id_length=$(echo -n "${org_id}" | wc -m)
   org_id_length_int=$(expr ${org_id_length} + 0)
-  if [ ${org_id_length_int} != 12 ]
+  if [ ${org_id_length_int} -gt 13 ]
   then
     echo "You have more than one org id, please manually enter the correct one."
     echo "Your org id will be in the format of xxxxxxxxxxxx"

@@ -108,15 +108,7 @@ variable "bigquery_chocoate_ai_dataset" {
   }
 }
 
-variable "data_beans_analytics_hub" {
-  type        = string
-  description = "The BigQuery dataset name for our data"
-  default     = "data_beans_analytics_hub"
-  validation {
-    condition     = length(var.data_beans_analytics_hub) > 0
-    error_message = "The bigquery dataset for analytics hub is required."
-  }
-}
+
 variable "multi_region" {
   type        = string
   description = "The GCP region to deploy BigQuery.  This should either match the region or be 'us' or 'eu'.  This also affects the GCS bucket and Data Catalog."

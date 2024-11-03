@@ -14,6 +14,33 @@
 # limitations under the License.
 ###################################################################################*/
 
-SELECT 'CREATE OR REPLACE TABLE `data-analytics-preview.chocolate_ai.' || table_name || '` COPY `data-analytics-preview.chocolate_ai.' || table_name || '` ;'
+-- To quickly copy all tables (need to exclude object table)
+SELECT 'CREATE OR REPLACE TABLE `PROJECT-ID.chocolate_ai.' || table_name || '` COPY `PROJECT-ID.chocolate_ai.' || table_name || '` ;'
   FROM chocolate_ai.INFORMATION_SCHEMA.TABLES
-ORDER BY table_name;
+ WHERE table_type = 'BASE TABLE'  
+ ORDER BY table_name;
+
+-- Sample Vector Search query
+-- Get the top 100 customers that match biking which will match "cycling"
+SELECT query.content AS search_string,
+       base.customer_profile_data AS customer_profile_data,
+       distance
+  FROM VECTOR_SEARCH( ( -- table to search
+                       SELECT customer_profile_data, customer_profile_data_embedding 
+                         FROM `PROJECT-ID.chocolate_ai.customer_marketing_profile` 
+                        WHERE ARRAY_LENGTH(customer_profile_data_embedding) = 768
+                      ),
+                      'customer_profile_data_embedding', -- the column name that contains our embedding (from query above)
+                      (
+                       SELECT text_embedding, content  -- encode our data to search
+                         FROM ML.GENERATE_TEXT_EMBEDDING(MODEL `${project_id}.${bigquery_chocoate_ai_dataset}.google-textembedding`,
+                                                         (SELECT 'biking'AS content),                                                             
+                                                         STRUCT(TRUE AS flatten_json_output, 
+                                                                'SEMANTIC_SIMILARITY' as task_type,
+                                                                 768 AS output_dimensionality)
+                                                          )
+                      ),
+                      'text_embedding', -- the column name of our newly embedded data (from query above)
+                      top_k => 100
+                      )
+ORDER BY distance;

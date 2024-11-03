@@ -186,11 +186,10 @@ module "resources" {
 
   terraform_service_account           = module.service-account.deployment_service_account
 
-  bigquery_chocoate_ai_dataset = var.bigquery_chocoate_ai_dataset
-  chocoate_ai_bucket           = local.chocoate_ai_bucket
-  data_beans_code_bucket              = local.code_bucket
+  bigquery_chocoate_ai_dataset        = var.bigquery_chocoate_ai_dataset
+  chocoate_ai_bucket                  = local.chocoate_ai_bucket
+  chocoate_ai_code_bucket             = local.code_bucket
   dataflow_staging_bucket             = local.dataflow_staging_bucket
-  data_beans_analytics_hub            = var.data_beans_analytics_hub
 
   depends_on = [
     module.project,
@@ -215,7 +214,7 @@ module "sql-scripts" {
   project_id                          = local.local_project_id
 
   dataplex_region                     = var.dataplex_region
-  multi_region                     = var.multi_region
+  multi_region                        = var.multi_region
   bigquery_non_multi_region           = var.bigquery_non_multi_region
   vertex_ai_region                    = var.vertex_ai_region
   data_catalog_region                 = var.data_catalog_region
@@ -228,11 +227,9 @@ module "sql-scripts" {
 
   terraform_service_account           = module.service-account.deployment_service_account
 
-  bigquery_chocoate_ai_dataset = var.bigquery_chocoate_ai_dataset
-  chocoate_ai_bucket           = local.chocoate_ai_bucket
-  data_beans_code_bucket              = local.code_bucket
-  data_beans_analytics_hub            = var.data_beans_analytics_hub
-
+  bigquery_chocoate_ai_dataset        = var.bigquery_chocoate_ai_dataset
+  chocoate_ai_bucket                  = local.chocoate_ai_bucket
+  chocoate_ai_code_bucket             = local.code_bucket
 
   depends_on = [
     module.project,
@@ -246,24 +243,25 @@ module "sql-scripts" {
 
 
 ####################################################################################
-# Deploy notebooks to Colab (Dataform)
+# Deploy notebooks to Colab -> Create the Dataform repo and files (base64 encoded)
 ####################################################################################
-module "deploy-notebooks-module" {
-  source = "../terraform-modules/colab-deployment"
+module "deploy-notebooks-module-create-files" {
+  source = "../terraform-modules/colab-deployment-create-files"
 
   # Use Service Account Impersonation for this step. 
   providers = { google = google.service_principal_impersonation }
 
   project_id                          = local.local_project_id
+  multi_region                        = var.multi_region
   vertex_ai_region                    = var.vertex_ai_region
-  bigquery_chocoate_ai_dataset = var.bigquery_chocoate_ai_dataset
-  chocoate_ai_bucket           = local.chocoate_ai_bucket
-  data_beans_code_bucket              = local.code_bucket
+  bigquery_chocoate_ai_dataset        = var.bigquery_chocoate_ai_dataset
+  chocoate_ai_bucket                  = local.chocoate_ai_bucket
+  chocoate_ai_code_bucket             = local.code_bucket
   dataform_region                     = "us-central1"
-  cloud_function_region               = "us-central1"
-  workflow_region                     = "us-central1"
   random_extension                    = random_string.project_random.result
   gcp_account_name                    = var.gcp_account_name
+  dataflow_staging_bucket             = local.dataflow_staging_bucket
+  dataflow_service_account            = module.resources.dataflow_service_account
 
   depends_on = [
     module.project,
@@ -272,6 +270,39 @@ module "deploy-notebooks-module" {
     time_sleep.service_account_api_activation_time_delay,
     module.org-policies,
     module.resources
+  ]
+}
+
+####################################################################################
+# Deploy notebooks to Colab -> Push the notebooks
+# This is done since there is a race condition when the files are base64 encoded
+####################################################################################
+module "deploy-notebooks-module-deploy" {
+  source = "../terraform-modules/colab-deployment-deploy"
+
+  # Use Service Account Impersonation for this step. 
+  providers = { google = google.service_principal_impersonation }
+
+  project_id                          = local.local_project_id
+  multi_region                        = var.multi_region
+  vertex_ai_region                    = var.vertex_ai_region
+  bigquery_chocoate_ai_dataset        = var.bigquery_chocoate_ai_dataset
+  chocoate_ai_bucket                  = local.chocoate_ai_bucket
+  chocoate_ai_code_bucket             = local.code_bucket
+  dataform_region                     = "us-central1"
+  random_extension                    = random_string.project_random.result
+  gcp_account_name                    = var.gcp_account_name
+  dataflow_staging_bucket             = local.dataflow_staging_bucket
+  dataflow_service_account            = module.resources.dataflow_service_account
+
+  depends_on = [
+    module.project,
+    module.service-account,
+    module.apis-batch-enable,
+    time_sleep.service_account_api_activation_time_delay,
+    module.org-policies,
+    module.resources,
+    module.deploy-notebooks-module-create-files
   ]
 }
 

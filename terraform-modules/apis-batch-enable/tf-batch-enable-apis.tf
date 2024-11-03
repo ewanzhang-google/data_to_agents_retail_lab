@@ -205,10 +205,12 @@ resource "google_project_service" "service-bigqueryconnection" {
   service = "bigqueryconnection.googleapis.com"
 }
 
+/*
 resource "google_project_service" "service-composer" {
   project = var.project_id
   service = "composer.googleapis.com"
 }
+*/
 
 resource "google_project_service" "service-dataproc" {
   project = var.project_id
@@ -265,20 +267,24 @@ resource "google_project_service" "service-bigquerydatapolicy" {
   service = "bigquerydatapolicy.googleapis.com"
 }
 
+/*
 resource "google_project_service" "service-cloudfunctions" {
   project = var.project_id
   service = "cloudfunctions.googleapis.com"
 }
+*/
 
 resource "google_project_service" "service-vision" {
   project = var.project_id
   service = "vision.googleapis.com"
 }
 
+/*
 resource "google_project_service" "service-datafusion" {
   project = var.project_id
   service = "datafusion.googleapis.com"
 }
+*/
 
 resource "google_project_service" "service-dataform" {
   project = var.project_id
@@ -290,15 +296,19 @@ resource "google_project_service" "service-secretmanager" {
   service = "secretmanager.googleapis.com"
 }
 
+/*
 resource "google_project_service" "service-appengine" {
   project = var.project_id
   service = "appengine.googleapis.com"
 }
+*/
 
+/*
 resource "google_project_service" "service-cloudrun" {
   project = var.project_id
   service = "run.googleapis.com"
 }
+*/
 
 resource "google_project_service" "service-biglake" {
   project = var.project_id
@@ -310,10 +320,12 @@ resource "google_project_service" "service-datalineage" {
   service = "datalineage.googleapis.com"
 }
 
+/*
 resource "google_project_service" "service-datastream" {
   project = var.project_id
   service = "datastream.googleapis.com"
 }
+*/
 
 resource "google_project_service" "service-pubsub" {
   project = var.project_id
@@ -326,30 +338,38 @@ resource "google_project_service" "service-servicenetworking" {
 }
 
 # For Cloud Run Deploy
+/*
 resource "google_project_service" "service-cloudbuild" {
   project = var.project_id
   service = "cloudbuild.googleapis.com"
 }
+*/
 
+/*
 resource "google_project_service" "service-clouddeploy" {
   project = var.project_id
   service = "clouddeploy.googleapis.com"
 }
+*/
 
+/*
 resource "google_project_service" "service-artifactregistry" {
   project = var.project_id
   service = "artifactregistry.googleapis.com"
 }
+*/
 
 resource "google_project_service" "service-speech" {
   project = var.project_id
   service = "speech.googleapis.com"
 }
 
+/*
 resource "google_project_service" "service-workflows" {
   project = var.project_id
   service = "workflows.googleapis.com"
 }
+*/
 
 resource "google_project_service" "texttospeech" {
   project = var.project_id
@@ -359,4 +379,19 @@ resource "google_project_service" "texttospeech" {
 resource "google_project_service" "managedkafka" {
   project = var.project_id
   service = "managedkafka.googleapis.com"
+}
+
+resource "google_project_service" "iamcredentials" {
+  project = var.project_id
+  service = "iamcredentials.googleapis.com"
+}
+
+resource "google_project_service" "iam" {
+  project = var.project_id
+  service = "iam.googleapis.com"
+}
+
+resource "google_project_service" "knowledgegraph" {
+  project = var.project_id
+  service = "kgsearch.googleapis.com"
 }

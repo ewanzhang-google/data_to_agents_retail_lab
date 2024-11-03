@@ -54,9 +54,8 @@ variable "terraform_service_account" {}
 
 variable "bigquery_chocoate_ai_dataset" {}
 variable "chocoate_ai_bucket" {}
-variable "data_beans_code_bucket" {}
+variable "chocoate_ai_code_bucket" {}
 variable "dataflow_staging_bucket" {}
-variable "data_beans_analytics_hub" {}
 
 data "google_client_config" "current" {
 }
@@ -74,9 +73,9 @@ resource "google_storage_bucket" "google_storage_bucket_chocoate_ai_bucket" {
   uniform_bucket_level_access = true
 }
 
-resource "google_storage_bucket" "google_storage_bucket_data_beans_code_bucket" {
+resource "google_storage_bucket" "google_storage_bucket_chocoate_ai_code_bucket" {
   project                     = var.project_id
-  name                        = var.data_beans_code_bucket
+  name                        = var.chocoate_ai_code_bucket
   location                    = var.multi_region
   force_destroy               = true
   uniform_bucket_level_access = true
@@ -250,29 +249,6 @@ resource "google_project_iam_member" "gcp_roles_datalineage_admin" {
   member  = "user:${var.gcp_account_name}"
 }
 
-####################################################################################
-# Bring in Analytics Hub reference
-####################################################################################
-# To get the URL go to the project hosting the Analtics Hub and view the display listing
-# You can copy the URL and get the fields needed (project number, location, exchange name and listing name)
-/*
-resource "null_resource" "analyticshub_data_beans" {
-  provisioner "local-exec" {
-    when    = create
-    command = <<EOF
-  curl --request POST \
-    "https://analyticshub.googleapis.com/v1/projects/312090430116/locations/us/dataExchanges/data_analytics_coffee_data_18b8c1d962e/listings/data_beans_18b8c24cd6f:subscribe" \
-    --header "Authorization: Bearer ${data.google_client_config.current.access_token}" \
-    --header "Accept: application/json" \
-    --header "Content-Type: application/json" \
-    --data '{"destinationDataset":{"datasetReference":{"datasetId":"${var.data_beans_analytics_hub}","projectId":"${var.project_id}"},"friendlyName":"Chocolate A.I.","location":"us","description":"Chocolate A.I. demo"}}' \
-    --compressed
-    EOF
-  }
-  depends_on = [
-  ]
-}
-*/
 
 ####################################################################################
 # BigQuery - Connections (BigLake, Functions, etc)
@@ -346,10 +322,6 @@ resource "null_resource" "colab_runtime_template" {
         machineSpec: {
           machineType: "e2-highmem-4"
         },
-        dataPersistentDiskSpec: {
-          diskType: "pd-standard",
-          diskSizeGb: 500,
-        },
         networkSpec: {
           enableInternetAccess: false,
           network: "projects/${var.project_id}/global/networks/vpc-main", 
@@ -365,7 +337,6 @@ EOF
     google_compute_subnetwork.colab_enterprise_subnet
   ]
 }
-
 
 # https://cloud.google.com/vertex-ai/docs/reference/rest/v1beta1/projects.locations.notebookRuntimes
 resource "null_resource" "colab_runtime" {
@@ -393,140 +364,95 @@ EOF
 
 
 ####################################################################################
-# Copy Data
+# New Service Account - For Continuous Queries
 ####################################################################################
-/* 
--- NOT NEEDED - USING LOAD COMMAND DIRECTLY FROM PUBLIC STORAGE
+resource "google_service_account" "kafka_continuous_query_service_account" {
+  project      = var.project_id
+  account_id   = "kafka-continuous-query"
+  display_name = "kafka-continuous-query"
+}
 
-# Define the list of notebook files to be created
-locals {
-  file_names = [ 
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fartifact%2Fartifact_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fartifact%2Fartifact_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcity%2Fcity_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcity%2Fcity_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcity_location%2Fcity_location_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcity_location%2Fcity_location_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcoffee_roaster%2Fcoffee_roaster_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcoffee_roaster%2Fcoffee_roaster_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcoffee_processor%2Fcoffee_processor_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcoffee_processor%2Fcoffee_processor_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcompany%2Fcompany_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcompany%2Fcompany_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcompany%2Fcompany_000000000001.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcompany%2Fcompany_000000000001.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcity_location_address%2Fcity_location_address_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcity_location_address%2Fcity_location_address_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_review%2Fcustomer_review_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_review%2Fcustomer_review_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer%2Fcustomer_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer%2Fcustomer_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_profile%2Fcustomer_profile_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_profile%2Fcustomer_profile_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_review%2Fcustomer_review_000000000001.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_review%2Fcustomer_review_000000000001.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcoffee_farm%2Fcoffee_farm_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcoffee_farm%2Fcoffee_farm_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_review%2Fcustomer_review_000000000002.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_review%2Fcustomer_review_000000000002.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_review%2Fcustomer_review_000000000003.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_review%2Fcustomer_review_000000000003.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000018.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000018.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_review_gen_ai_insight%2Fcustomer_review_gen_ai_insight_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fcustomer_review_gen_ai_insight%2Fcustomer_review_gen_ai_insight_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fevent%2Fevent_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fevent%2Fevent_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fevent%2Fevent_000000000001.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fevent%2Fevent_000000000001.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fevent%2Fevent_000000000002.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fevent%2Fevent_000000000002.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fevent_gen_ai_insight%2Fevent_gen_ai_insight_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fevent_gen_ai_insight%2Fevent_gen_ai_insight_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Flocation%2Flocation_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Flocation%2Flocation_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Flocation_history%2Flocation_history_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Flocation_history%2Flocation_history_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fmarketing_gen_ai_insight%2Fmarketing_gen_ai_insight_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fmarketing_gen_ai_insight%2Fmarketing_gen_ai_insight_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fmenu_a_b_testing%2Fmenu_a_b_testing_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fmenu_a_b_testing%2Fmenu_a_b_testing_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fmenu%2Fmenu_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fmenu%2Fmenu_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000001.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000001.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000002.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000002.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000003.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000003.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000004.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000004.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000005.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000005.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000007.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000007.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000008.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000008.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000009.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000009.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000011.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000011.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000006.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000006.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000010.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000010.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000012.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000012.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000013.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000013.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000016.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000016.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000014.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000014.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000015.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000015.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000021.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000021.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000001.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000001.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000017.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000017.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000022.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000022.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000002.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000002.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000004.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000004.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000020.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000020.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000003.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000003.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000019.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000019.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000006.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000006.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000005.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000005.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000007.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000007.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000023.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000023.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000024.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder%2Forder_000000000024.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000009.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000009.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000008.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000008.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000010.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000010.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000011.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000011.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000012.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000012.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000013.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000013.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000014.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000014.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000015.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000015.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000016.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000016.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000017.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000017.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000018.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000018.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000019.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000019.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000020.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000020.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000021.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000021.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000022.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000022.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000023.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000023.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000024.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000024.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000025.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000025.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000026.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000026.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000027.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000027.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000028.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000028.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000029.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000029.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000030.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000030.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000031.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000031.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000032.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000032.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000033.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000033.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000034.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000034.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000035.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000035.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000036.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000036.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000037.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000037.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000038.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000038.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000039.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000039.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000040.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000040.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000041.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000041.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000042.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000042.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000043.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000043.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000044.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000044.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000045.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000045.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000046.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000046.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000047.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000047.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000048.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000048.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000049.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000049.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000050.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000050.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000051.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000051.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000052.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000052.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000053.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000053.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000054.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000054.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000055.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000055.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000056.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Forder_item%2Forder_item_000000000056.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fsales_forecast%2Fsales_forecast_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fsales_forecast%2Fsales_forecast_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fvideo_processing%2Fvideo_processing_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fvideo_processing%2Fvideo_processing_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fweather%2Fweather_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fweather%2Fweather_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fweather_gen_ai_insight%2Fweather_gen_ai_insight_000000000000.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fweather_gen_ai_insight%2Fweather_gen_ai_insight_000000000000.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fweather_gen_ai_insight%2Fweather_gen_ai_insight_000000000001.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fweather_gen_ai_insight%2Fweather_gen_ai_insight_000000000001.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\"",
-"curl -X POST \"https://storage.googleapis.com/storage/v1/b/data-analytics-golden-demo/o/chocolate-ai%2Fv1%2Fexport%2Fweather_gen_ai_insight%2Fweather_gen_ai_insight_000000000002.avro/rewriteTo/b/${var.chocoate_ai_bucket}/o/chocolate-ai%2Fv1%2Fexport%2Fweather_gen_ai_insight%2Fweather_gen_ai_insight_000000000002.avro\" --header \"Authorization: Bearer ${data.google_client_config.current.access_token}\" --header \"Content-Length: 0\""]
+# Needs access to BigQuery
+resource "google_project_iam_member" "kafka_continuous_query_service_account_bigquery_admin" {
+  project  = var.project_id
+  role     = "roles/bigquery.admin"
+  member   = "serviceAccount:${google_service_account.kafka_continuous_query_service_account.email}"
+
+  depends_on = [
+    google_service_account.kafka_continuous_query_service_account
+  ]
+}
+
+# Needs access to Pub/Sub
+resource "google_project_iam_member" "kafka_continuous_query_service_account_pubsub_admin" {
+  project  = var.project_id
+  role     = "roles/pubsub.admin"
+  member   = "serviceAccount:${google_service_account.kafka_continuous_query_service_account.email}"
+
+  depends_on = [
+    google_project_iam_member.kafka_continuous_query_service_account_bigquery_admin
+  ]
 }
 
 
-resource "null_resource" "copy_data_files" {
-  count    = length(local.file_names)
-  provisioner "local-exec" {
-    when    = create
-    command = "${local.file_names[count.index]}"
+####################################################################################
+# Pub/Sub (Topic and Subscription)
+####################################################################################
+resource "google_pubsub_topic" "google_pubsub_topic_bq_continuous_query" {
+  project  = var.project_id
+  name = "bq-continuous-query"
+  message_retention_duration = "86400s"
+}
+
+resource "google_pubsub_subscription" "google_pubsub_subscription_bq_continuous_query" {
+  project  = var.project_id  
+  name  = "bq-continuous-query"
+  topic = google_pubsub_topic.google_pubsub_topic_bq_continuous_query.id
+
+  message_retention_duration = "86400s"
+  retain_acked_messages      = false
+
+  expiration_policy {
+    ttl = "86400s"
   }
-  depends_on = [  google_storage_bucket.google_storage_bucket_chocoate_ai_bucket ]
+
+  retry_policy {
+    minimum_backoff = "10s"
+  }
+
+  enable_message_ordering    = false
+
+  depends_on = [
+    google_pubsub_topic.google_pubsub_topic_bq_continuous_query
+  ]
 }
-*/
+
+
+####################################################################################
+# DataFlow Service Account
+####################################################################################
+# Service account for dataflow cluster
+resource "google_service_account" "dataflow_service_account" {
+  project      = var.project_id
+  account_id   = "dataflow-service-account"
+  display_name = "Service Account for Dataflow Environment"
+}
+
+
+# Grant editor (too high) to service account
+resource "google_project_iam_member" "dataflow_service_account_editor_role" {
+  project = var.project_id
+  role    = "roles/editor"
+  member  = "serviceAccount:${google_service_account.dataflow_service_account.email}"
+
+  depends_on = [
+    google_service_account.dataflow_service_account
+  ]
+}
 
 ####################################################################################
 # Outputs
 ####################################################################################
+output "dataflow_service_account" {
+  value = google_service_account.dataflow_service_account.email
+}

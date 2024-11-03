@@ -52,8 +52,7 @@ variable "terraform_service_account" {}
 
 variable "bigquery_chocoate_ai_dataset" {}
 variable "chocoate_ai_bucket" {}
-variable "data_beans_code_bucket" {}
-variable "data_beans_analytics_hub" {}
+variable "chocoate_ai_code_bucket" {}
 
 data "google_client_config" "current" {
 }
@@ -120,7 +119,6 @@ resource "google_bigquery_routine" "initialize" {
   { 
     project_id = var.project_id
     bigquery_chocoate_ai_dataset = var.bigquery_chocoate_ai_dataset
-    data_beans_analytics_hub = var.data_beans_analytics_hub
     chocoate_ai_bucket = var.chocoate_ai_bucket
   })
 }

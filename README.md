@@ -9,6 +9,8 @@ This isn't just theory; it's a fully functional, end-to-end demo.  All code is a
 Managed Service for Apache Kafka, Dataflow, BigQuery (streaming ingestion) and BigQuery Continuous Queries (for real time analytics) that calls Gemini Pro
 ![Geofencing Demo](images/Kafka-Geofencing.png)
 
+![Geofencing Demo](https://storage.googleapis.com/data-analytics-golden-demo/chocolate-ai/v1/Artifacts/Geofencing.gif)
+
 ### Spanner Graph
 Unlock deeper insights from your connected data. By using Reverse ETL to move data from BigQuery to Spanner Graph, you can easily explore complex relationships and patterns. Spanner Graph seamlessly combines the power of SQL with graph analysis, giving you a complete view of your data.
 

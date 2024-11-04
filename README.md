@@ -73,6 +73,17 @@ Each notebook demonstrates a key aspect of the Chocolate AI solution.  Explore t
 | Synthetic Data Generation: Orders | Generates synthetic order data, including order details and future orders, to ensure queries remain functional over time. | Gemini Pro, BigQuery | [Synthetic-Data-Generation-Orders](colab-enterprise/Synthetic-Data-Generation-Orders.ipynb) |
 
 
+## Sample Chocolate AI Geneated Menu Images using Imagen3
+
+![Geneated Menu Images using Imagen3](images/menu-collage-01.png)
+
+![Geneated Menu Images using Imagen3](images/menu-collage-02.png)
+
+![Geneated Menu Images using Imagen3](images/menu-collage-03.png)
+
+![Geneated Menu Images using Imagen3](images/menu-collage-04.png)
+
+
 ## How to deploy
 The are two options to deploy the demo depending on your access privilages to your cloud organization
 

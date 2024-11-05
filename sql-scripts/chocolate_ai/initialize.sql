@@ -139,7 +139,7 @@ AS
 SELECT
     customer_id,
     JSON_VALUE(customer_profile_data.children) AS children,
-    ARRAY_TO_STRING(JSON_VALUE_ARRAY(customer_profile_data.coffee_preferences), ",") AS coffee_preferences,
+    ARRAY_TO_STRING(JSON_VALUE_ARRAY(customer_profile_data.chocolate_preferences), ",") AS chocolate_preferences,
     ARRAY_TO_STRING(JSON_VALUE_ARRAY(customer_profile_data.content_interaction), ",") AS content_interaction,
     CAST(JSON_VALUE(customer_profile_data.customer_age) AS INT64) AS customer_age,
     JSON_VALUE(customer_profile_data.education) AS education,
@@ -328,7 +328,7 @@ SELECT
     mp.willingness_to_pay,
     -- Customer Profile
     cp.children,
-    cp.coffee_preferences,
+    cp.chocolate_preferences,
     cp.content_interaction,
     cp.customer_age,
     cp.facebook_bio,

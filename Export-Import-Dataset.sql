@@ -44,7 +44,7 @@ gsutil -m -q cp -r gs://data-analytics-preview/chocolate-ai/Data-Export  gs://da
 -- STEP 5 - Generate LOAD commands, in data-analytics-preview project
 --------------------------------------------------------------------------------------------------
 -- https://cloud.google.com/bigquery/docs/reference/standard-sql/other-statements#load_data_statement
-SELECT CONCAT("LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}." , table_name, 
+SELECT CONCAT("LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}." , table_name, 
               "` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/" , table_name , "/" , table_name , "_*.avro']);") AS load_command
 FROM `chocolate_ai.INFORMATION_SCHEMA.TABLES`
 WHERE table_type = 'BASE TABLE' 

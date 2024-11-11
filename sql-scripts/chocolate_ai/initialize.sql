@@ -36,15 +36,15 @@ Clean up / Reset script:
 ------------------------------------------------------------------------------------------------------------
 -- Create GenAI / Vertex AI connections
 ------------------------------------------------------------------------------------------------------------
-CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocoate_ai_dataset}.gemini_pro`
+CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocolate_ai_dataset}.gemini_pro`
   REMOTE WITH CONNECTION `${project_id}.us.vertex-ai`
   OPTIONS (endpoint = 'gemini-pro');
 
-CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocoate_ai_dataset}.gemini_pro_1_5`
+CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocolate_ai_dataset}.gemini_pro_1_5`
   REMOTE WITH CONNECTION `${project_id}.us.vertex-ai`
   OPTIONS (endpoint = 'gemini-1.5-pro-001');
 
-CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocoate_ai_dataset}.google-textembedding`
+CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocolate_ai_dataset}.google-textembedding`
   REMOTE WITH CONNECTION `${project_id}.us.vertex-ai`
   OPTIONS (endpoint = 'text-embedding-004');
 
@@ -52,39 +52,39 @@ CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocoate_ai_dataset}.google
 ------------------------------------------------------------------------------------------------------------
 -- Load all data
 ------------------------------------------------------------------------------------------------------------
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.campaign` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/campaign/campaign_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.campaign_abcd_results` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/campaign_abcd_results/campaign_abcd_results_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.campaign_name_suggestion` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/campaign_name_suggestion/campaign_name_suggestion_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.campaign_performance` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/campaign_performance/campaign_performance_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.customer` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer/customer_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.customer_geo_location` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer_geo_location/customer_geo_location_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.customer_geo_location_results` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer_geo_location_results/customer_geo_location_results_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.customer_hyper_personalized_email` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer_hyper_personalized_email/customer_hyper_personalized_email_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer_marketing_profile/customer_marketing_profile_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.customer_review` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer_review/customer_review_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.data_insights` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/data_insights/data_insights_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.event` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/event/event_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.looker_ad_events` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_ad_events/looker_ad_events_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.looker_ad_groups` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_ad_groups/looker_ad_groups_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.looker_campaigns` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_campaigns/looker_campaigns_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.looker_derived_sessions` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_derived_sessions/looker_derived_sessions_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.looker_derived_sessions_purchase_facts` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_derived_sessions_purchase_facts/looker_derived_sessions_purchase_facts_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.looker_derived_user_product_sales` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_derived_user_product_sales/looker_derived_user_product_sales_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.looker_discounts` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_discounts/looker_discounts_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.looker_events` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_events/looker_events_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.looker_keywords` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_keywords/looker_keywords_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.looker_users` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_users/looker_users_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.menu` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/menu/menu_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.order` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/order/order_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.order_item` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/order_item/order_item_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.spanner_social_data` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/spanner_social_data/spanner_social_data_*.avro']);
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocoate_ai_dataset}.store` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/store/store_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.campaign` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/campaign/campaign_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.campaign_abcd_results` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/campaign_abcd_results/campaign_abcd_results_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.campaign_name_suggestion` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/campaign_name_suggestion/campaign_name_suggestion_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.campaign_performance` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/campaign_performance/campaign_performance_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.customer` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer/customer_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.customer_geo_location` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer_geo_location/customer_geo_location_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.customer_geo_location_results` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer_geo_location_results/customer_geo_location_results_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.customer_hyper_personalized_email` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer_hyper_personalized_email/customer_hyper_personalized_email_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer_marketing_profile/customer_marketing_profile_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.customer_review` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer_review/customer_review_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.data_insights` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/data_insights/data_insights_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.event` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/event/event_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_ad_events` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_ad_events/looker_ad_events_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_ad_groups` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_ad_groups/looker_ad_groups_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_campaigns` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_campaigns/looker_campaigns_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_derived_sessions` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_derived_sessions/looker_derived_sessions_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_derived_sessions_purchase_facts` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_derived_sessions_purchase_facts/looker_derived_sessions_purchase_facts_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_derived_user_product_sales` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_derived_user_product_sales/looker_derived_user_product_sales_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_discounts` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_discounts/looker_discounts_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_events` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_events/looker_events_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_keywords` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_keywords/looker_keywords_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_users` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_users/looker_users_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.menu` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/menu/menu_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.order` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/order/order_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.order_item` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/order_item/order_item_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.spanner_social_data` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/spanner_social_data/spanner_social_data_*.avro']);
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.store` FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/store/store_*.avro']);
 
 
 ------------------------------------------------------------------------------------------------------------
 -- Create Views
 ------------------------------------------------------------------------------------------------------------
-CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocoate_ai_dataset}.chocolate_insights`(
+CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocolate_ai_dataset}.chocolate_insights`(
           store_name OPTIONS (DESCRIPTION='Name of the Store'),
           store_address OPTIONS (DESCRIPTION='The address of the store'),
           store_latitude OPTIONS (DESCRIPTION='Latitude of the store'),
@@ -123,18 +123,18 @@ CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocoate_ai_dataset}.chocolate_
           item_total,
           item_price,
           item_size
-  FROM `${project_id}.${bigquery_chocoate_ai_dataset}.store` store
-       INNER JOIN `${project_id}.${bigquery_chocoate_ai_dataset}.order` orders
+  FROM `${project_id}.${bigquery_chocolate_ai_dataset}.store` store
+       INNER JOIN `${project_id}.${bigquery_chocolate_ai_dataset}.order` orders
                ON store.store_id = orders.store_id
-       INNER JOIN `${project_id}.${bigquery_chocoate_ai_dataset}.order_item` order_item
+       INNER JOIN `${project_id}.${bigquery_chocolate_ai_dataset}.order_item` order_item
                ON order_item.order_id=orders.order_id
-       INNER JOIN `${project_id}.${bigquery_chocoate_ai_dataset}.menu` menu
+       INNER JOIN `${project_id}.${bigquery_chocolate_ai_dataset}.menu` menu
                ON menu.menu_id=order_item.menu_id
-       INNER JOIN `${project_id}.${bigquery_chocoate_ai_dataset}.customer` customer
+       INNER JOIN `${project_id}.${bigquery_chocolate_ai_dataset}.customer` customer
                ON customer.customer_id=orders.customer_id;
 
 
-CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile_data`
+CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile_data`
 AS
 SELECT
     customer_id,
@@ -174,10 +174,10 @@ SELECT
         FROM UNNEST(JSON_QUERY_ARRAY(customer_profile_data, '$.customer_service_interactions')) AS interaction
     ) AS customer_service_interactions
   FROM
-    `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile`;
+    `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile`;
 
 
-CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile_loyalty`
+CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile_loyalty`
 AS
 SELECT
     customer_id,
@@ -194,10 +194,10 @@ SELECT
     CAST(JSON_VALUE(customer_loyalty_data.total_orders) AS INT64) AS total_orders,
     CAST(JSON_VALUE(customer_loyalty_data.total_reviews) AS INT64) AS total_reviews
   FROM
-    `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile`;
+    `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile`;
 
 
-CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile_segments`
+CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile_segments`
 AS
 SELECT
     customer_id,
@@ -259,9 +259,9 @@ SELECT
     JSON_VALUE(customer_segmentation_data.customer_segments.value_based_segmentation.`Perceived Value`) AS perceived_value,
     JSON_VALUE(customer_segmentation_data.customer_segments.value_based_segmentation.`Price Sensitivity`) AS price_sensitivity,
     JSON_VALUE(customer_segmentation_data.customer_segments.value_based_segmentation.`Willingness to Pay`) AS willingness_to_pay
-FROM `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile`;
+FROM `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile`;
 
-CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocoate_ai_dataset}.customer_360`
+CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocolate_ai_dataset}.customer_360`
 AS
 SELECT
     mp.customer_id,
@@ -365,11 +365,11 @@ SELECT
     cl.total_orders,
     cl.total_reviews
   FROM
-    `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile_segments` AS mp
-    INNER JOIN `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile_data` AS cp ON mp.customer_id = cp.customer_id
-    INNER JOIN `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile_loyalty` AS cl ON mp.customer_id = cl.customer_id
-    INNER JOIN `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile` AS cmp ON mp.customer_id = cmp.customer_id;
+    `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile_segments` AS mp
+    INNER JOIN `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile_data` AS cp ON mp.customer_id = cp.customer_id
+    INNER JOIN `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile_loyalty` AS cl ON mp.customer_id = cl.customer_id
+    INNER JOIN `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile` AS cmp ON mp.customer_id = cmp.customer_id;
 
 CREATE VECTOR INDEX customer_marketing_insights_embedding_ivf
-ON `${project_id}.${bigquery_chocoate_ai_dataset}.customer_marketing_profile`(customer_marketing_insights_embedding)
+ON `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile`(customer_marketing_insights_embedding)
 OPTIONS (index_type = 'IVF', distance_type = 'COSINE');

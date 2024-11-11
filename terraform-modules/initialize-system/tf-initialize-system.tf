@@ -36,4 +36,4 @@ terraform {
 # Variables
 ####################################################################################
 variable "project_id" {}
-variable "bigquery_chocoate_ai_dataset" {}
+variable "bigquery_chocolate_ai_dataset" {}

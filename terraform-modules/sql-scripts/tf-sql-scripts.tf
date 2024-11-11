@@ -50,9 +50,9 @@ variable "project_number" {}
 variable "deployment_service_account_name" {}
 variable "terraform_service_account" {}
 
-variable "bigquery_chocoate_ai_dataset" {}
-variable "chocoate_ai_bucket" {}
-variable "chocoate_ai_code_bucket" {}
+variable "bigquery_chocolate_ai_dataset" {}
+variable "chocolate_ai_bucket" {}
+variable "chocolate_ai_code_bucket" {}
 
 data "google_client_config" "current" {
 }
@@ -62,7 +62,7 @@ data "google_client_config" "current" {
 ####################################################################################
 resource "google_bigquery_routine" "clean_llmgemini_pro_result_as_json_json" {
   project         = var.project_id
-  dataset_id      = var.bigquery_chocoate_ai_dataset
+  dataset_id      = var.bigquery_chocolate_ai_dataset
   routine_id      = "gemini_pro_result_as_json"
   routine_type    = "SCALAR_FUNCTION"
   language        = "SQL"
@@ -70,7 +70,7 @@ resource "google_bigquery_routine" "clean_llmgemini_pro_result_as_json_json" {
   definition_body = templatefile("../sql-scripts/chocolate_ai/gemini_pro_result_as_json.sql", 
   { 
     project_id = var.project_id
-    bigquery_chocoate_ai_dataset = var.bigquery_chocoate_ai_dataset
+    bigquery_chocolate_ai_dataset = var.bigquery_chocolate_ai_dataset
   })
 
   arguments {
@@ -85,7 +85,7 @@ resource "google_bigquery_routine" "clean_llmgemini_pro_result_as_json_json" {
 
 resource "google_bigquery_routine" "gemini_pro_result_as_string" {
   project         = var.project_id
-  dataset_id      = var.bigquery_chocoate_ai_dataset
+  dataset_id      = var.bigquery_chocolate_ai_dataset
   routine_id      = "gemini_pro_result_as_string"
   routine_type    = "SCALAR_FUNCTION"
   language        = "SQL"
@@ -93,7 +93,7 @@ resource "google_bigquery_routine" "gemini_pro_result_as_string" {
   definition_body = templatefile("../sql-scripts/chocolate_ai/gemini_pro_result_as_string.sql", 
   { 
     project_id = var.project_id
-    bigquery_chocoate_ai_dataset = var.bigquery_chocoate_ai_dataset
+    bigquery_chocolate_ai_dataset = var.bigquery_chocolate_ai_dataset
   })
 
   arguments {
@@ -111,15 +111,15 @@ resource "google_bigquery_routine" "gemini_pro_result_as_string" {
 ####################################################################################
 resource "google_bigquery_routine" "initialize" {
   project         = var.project_id
-  dataset_id      = var.bigquery_chocoate_ai_dataset
+  dataset_id      = var.bigquery_chocolate_ai_dataset
   routine_id      = "initialize"
   routine_type    = "PROCEDURE"
   language        = "SQL"
   definition_body = templatefile("../sql-scripts/chocolate_ai/initialize.sql", 
   { 
     project_id = var.project_id
-    bigquery_chocoate_ai_dataset = var.bigquery_chocoate_ai_dataset
-    chocoate_ai_bucket = var.chocoate_ai_bucket
+    bigquery_chocolate_ai_dataset = var.bigquery_chocolate_ai_dataset
+    chocolate_ai_bucket = var.chocolate_ai_bucket
   })
 }
 
@@ -138,7 +138,7 @@ data "http" "call_sp_initialize" {
   request_headers = {
     Accept = "application/json"
   Authorization = "Bearer ${data.google_client_config.current.access_token}" }
-  request_body = "{\"configuration\":{\"query\":{\"query\":\"CALL `${var.project_id}.${var.bigquery_chocoate_ai_dataset}.initialize`();\",\"useLegacySql\":false}}}"
+  request_body = "{\"configuration\":{\"query\":{\"query\":\"CALL `${var.project_id}.${var.bigquery_chocolate_ai_dataset}.initialize`();\",\"useLegacySql\":false}}}"
   depends_on = [
      google_bigquery_routine.initialize
   ]
@@ -154,7 +154,7 @@ resource "null_resource" "call_sp_initialize" {
   https://bigquery.googleapis.com/bigquery/v2/projects/${var.project_id}/jobs \
   --header "Authorization: Bearer ${data.google_client_config.current.access_token}" \
   --header "Content-Type: application/json" \
-  --data '{ "configuration" : { "query" : { "query" : "CALL `${var.project_id}.${var.bigquery_chocoate_ai_dataset}.initialize`();", "useLegacySql" : false } } }'
+  --data '{ "configuration" : { "query" : { "query" : "CALL `${var.project_id}.${var.bigquery_chocolate_ai_dataset}.initialize`();", "useLegacySql" : false } } }'
 EOF
   }
   depends_on = [

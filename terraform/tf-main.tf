@@ -186,9 +186,9 @@ module "resources" {
 
   terraform_service_account           = module.service-account.deployment_service_account
 
-  bigquery_chocoate_ai_dataset        = var.bigquery_chocoate_ai_dataset
-  chocoate_ai_bucket                  = local.chocoate_ai_bucket
-  chocoate_ai_code_bucket             = local.code_bucket
+  bigquery_chocolate_ai_dataset        = var.bigquery_chocolate_ai_dataset
+  chocolate_ai_bucket                  = local.chocolate_ai_bucket
+  chocolate_ai_code_bucket             = local.code_bucket
   dataflow_staging_bucket             = local.dataflow_staging_bucket
 
   depends_on = [
@@ -227,9 +227,9 @@ module "sql-scripts" {
 
   terraform_service_account           = module.service-account.deployment_service_account
 
-  bigquery_chocoate_ai_dataset        = var.bigquery_chocoate_ai_dataset
-  chocoate_ai_bucket                  = local.chocoate_ai_bucket
-  chocoate_ai_code_bucket             = local.code_bucket
+  bigquery_chocolate_ai_dataset        = var.bigquery_chocolate_ai_dataset
+  chocolate_ai_bucket                  = local.chocolate_ai_bucket
+  chocolate_ai_code_bucket             = local.code_bucket
 
   depends_on = [
     module.project,
@@ -254,9 +254,9 @@ module "deploy-notebooks-module-create-files" {
   project_id                          = local.local_project_id
   multi_region                        = var.multi_region
   vertex_ai_region                    = var.vertex_ai_region
-  bigquery_chocoate_ai_dataset        = var.bigquery_chocoate_ai_dataset
-  chocoate_ai_bucket                  = local.chocoate_ai_bucket
-  chocoate_ai_code_bucket             = local.code_bucket
+  bigquery_chocolate_ai_dataset        = var.bigquery_chocolate_ai_dataset
+  chocolate_ai_bucket                  = local.chocolate_ai_bucket
+  chocolate_ai_code_bucket             = local.code_bucket
   dataform_region                     = "us-central1"
   random_extension                    = random_string.project_random.result
   gcp_account_name                    = var.gcp_account_name
@@ -286,9 +286,9 @@ module "deploy-notebooks-module-deploy" {
   project_id                          = local.local_project_id
   multi_region                        = var.multi_region
   vertex_ai_region                    = var.vertex_ai_region
-  bigquery_chocoate_ai_dataset        = var.bigquery_chocoate_ai_dataset
-  chocoate_ai_bucket                  = local.chocoate_ai_bucket
-  chocoate_ai_code_bucket             = local.code_bucket
+  bigquery_chocolate_ai_dataset        = var.bigquery_chocolate_ai_dataset
+  chocolate_ai_bucket                  = local.chocolate_ai_bucket
+  chocolate_ai_code_bucket             = local.code_bucket
   dataform_region                     = "us-central1"
   random_extension                    = random_string.project_random.result
   gcp_account_name                    = var.gcp_account_name

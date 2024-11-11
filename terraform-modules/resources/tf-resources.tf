@@ -52,9 +52,9 @@ variable "project_number" {}
 variable "deployment_service_account_name" {}
 variable "terraform_service_account" {}
 
-variable "bigquery_chocoate_ai_dataset" {}
-variable "chocoate_ai_bucket" {}
-variable "chocoate_ai_code_bucket" {}
+variable "bigquery_chocolate_ai_dataset" {}
+variable "chocolate_ai_bucket" {}
+variable "chocolate_ai_code_bucket" {}
 variable "dataflow_staging_bucket" {}
 
 data "google_client_config" "current" {
@@ -65,17 +65,17 @@ data "google_client_config" "current" {
 # This is your "Data Lake" bucket
 # If you are using Dataplex you should create a bucket per data lake zone (bronze, silver, gold, etc.)
 ####################################################################################
-resource "google_storage_bucket" "google_storage_bucket_chocoate_ai_bucket" {
+resource "google_storage_bucket" "google_storage_bucket_chocolate_ai_bucket" {
   project                     = var.project_id
-  name                        = var.chocoate_ai_bucket
+  name                        = var.chocolate_ai_bucket
   location                    = var.multi_region
   force_destroy               = true
   uniform_bucket_level_access = true
 }
 
-resource "google_storage_bucket" "google_storage_bucket_chocoate_ai_code_bucket" {
+resource "google_storage_bucket" "google_storage_bucket_chocolate_ai_code_bucket" {
   project                     = var.project_id
-  name                        = var.chocoate_ai_code_bucket
+  name                        = var.chocolate_ai_code_bucket
   location                    = var.multi_region
   force_destroy               = true
   uniform_bucket_level_access = true
@@ -208,10 +208,10 @@ resource "google_compute_router_nat" "nat-config-distinct-regions" {
 ####################################################################################
 # BigQuery Datasets
 ####################################################################################
-resource "google_bigquery_dataset" "google_bigquery_dataset_chocoate_ai" {
+resource "google_bigquery_dataset" "google_bigquery_dataset_chocolate_ai" {
   project       = var.project_id
-  dataset_id    = var.bigquery_chocoate_ai_dataset
-  friendly_name = var.bigquery_chocoate_ai_dataset
+  dataset_id    = var.bigquery_chocolate_ai_dataset
+  friendly_name = var.bigquery_chocolate_ai_dataset
   description   = "This dataset contains the data for the Chocolate A.I. demo."
   location      = var.multi_region
 }

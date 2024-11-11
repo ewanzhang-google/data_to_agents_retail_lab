@@ -30,9 +30,9 @@ terraform {
 variable "project_id" {}
 variable "multi_region" {}
 variable "vertex_ai_region" {}
-variable "bigquery_chocoate_ai_dataset" {}
-variable "chocoate_ai_bucket" {}
-variable "chocoate_ai_code_bucket" {}
+variable "bigquery_chocolate_ai_dataset" {}
+variable "chocolate_ai_bucket" {}
+variable "chocolate_ai_code_bucket" {}
 variable "dataform_region" {}
 variable "random_extension" {}
 variable "gcp_account_name" {}
@@ -79,10 +79,10 @@ resource "local_file" "local_file_chocolate_ai_notebooks" {
     bigquery_location = var.multi_region
     region = var.vertex_ai_region
     location = var.vertex_ai_region
-    chocoate_ai_bucket = var.chocoate_ai_bucket
-    bigquery_chocoate_ai_dataset = var.bigquery_chocoate_ai_dataset
-    chocoate_ai_bucket = var.chocoate_ai_bucket
-    chocoate_ai_code_bucket = var.chocoate_ai_code_bucket
+    chocolate_ai_bucket = var.chocolate_ai_bucket
+    bigquery_chocolate_ai_dataset = var.bigquery_chocolate_ai_dataset
+    chocolate_ai_bucket = var.chocolate_ai_bucket
+    chocolate_ai_code_bucket = var.chocolate_ai_code_bucket
     dataflow_staging_bucket = var.dataflow_staging_bucket
     dataflow_service_account = var.dataflow_service_account
     }

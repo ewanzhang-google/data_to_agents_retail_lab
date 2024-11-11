@@ -30,9 +30,9 @@ terraform {
 variable "project_id" {}
 variable "multi_region" {}
 variable "vertex_ai_region" {}
-variable "bigquery_chocoate_ai_dataset" {}
-variable "chocoate_ai_bucket" {}
-variable "chocoate_ai_code_bucket" {}
+variable "bigquery_chocolate_ai_dataset" {}
+variable "chocolate_ai_bucket" {}
+variable "chocolate_ai_code_bucket" {}
 variable "dataform_region" {}
 variable "random_extension" {}
 variable "gcp_account_name" {}

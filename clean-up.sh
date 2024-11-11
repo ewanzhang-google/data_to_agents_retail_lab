@@ -32,7 +32,6 @@
 rm -r ./terraform/.terraform
 rm ./terraform/.terraform.lock.hcl
 rm ./terraform/terraform.tfstate
-rm ./terraform/terraform.tfstate.backup
 rm ./terraform/tf-output.json
 rm -r ./terraform-modules/colab-deployment-create-files/notebooks
 rm -r ./terraform-modules/colab-deployment-create-files/notebooks_base64

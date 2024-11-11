@@ -105,7 +105,7 @@ CLUSTER BY id, keyword_id
 FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_ad_events/looker_ad_events_*.avro']);
 
 LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_ad_groups` 
-CLUSTER BY id, campaign_id
+CLUSTER BY ad_id, campaign_id
 FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_ad_groups/looker_ad_groups_*.avro']);
 
 LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_campaigns` 

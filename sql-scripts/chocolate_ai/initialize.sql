@@ -149,7 +149,7 @@ CLUSTER BY order_id, store_id
 FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/order/order_*.avro']);
 
 LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.order_item` 
-CLUSTER BY order_id, menu_id 
+CLUSTER BY order_item_id, order_id 
 FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/order_item/order_item_*.avro']);
 
 LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.spanner_social_data` 

@@ -395,3 +395,8 @@ resource "google_project_service" "knowledgegraph" {
   project = var.project_id
   service = "kgsearch.googleapis.com"
 }
+
+resource "google_project_service" "discoveryengine" {
+  project = var.project_id
+  service = "discoveryengine.googleapis.com"
+}

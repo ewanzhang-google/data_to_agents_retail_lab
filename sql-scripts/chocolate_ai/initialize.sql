@@ -48,6 +48,9 @@ CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocolate_ai_dataset}.googl
   REMOTE WITH CONNECTION `${project_id}.us.vertex-ai`
   OPTIONS (endpoint = 'text-embedding-004');
 
+CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocolate_ai_dataset}.google-textembedding-005`
+  REMOTE WITH CONNECTION `${project_id}.us.vertex-ai`
+  OPTIONS (endpoint = 'text-embedding-005');
 
 ------------------------------------------------------------------------------------------------------------
 -- Load all data
@@ -140,10 +143,6 @@ LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.looker_users
 CLUSTER BY id
 FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/looker_users/looker_users_*.avro']);
 
-LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.menu` 
-CLUSTER BY menu_id
-FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/menu/menu_*.avro']);
-
 LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.order`
 CLUSTER BY order_id, store_id 
 FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/order/order_*.avro']);
@@ -159,6 +158,49 @@ FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-an
 LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.store` 
 CLUSTER BY store_id 
 FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/store/store_*.avro']);
+
+------------------------------------------------------------------------------------------------------------
+-- v2 - Oracle update
+------------------------------------------------------------------------------------------------------------
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.generated_customer_allergy_information` 
+CLUSTER BY customer_id
+FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v2/Data-Export/generated_customer_allergy_information/generated_customer_allergy_information_*.avro']);
+
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.generated_ingredients` 
+CLUSTER BY menu_id
+FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v2/Data-Export/generated_ingredients/generated_ingredients_*.avro']);
+
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.generated_inventory` 
+CLUSTER BY inventory_id
+FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v2/Data-Export/generated_inventory/generated_inventory_*.avro']);
+
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.menu` 
+CLUSTER BY menu_id
+FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v2/Data-Export/menu/menu_*.avro']);
+
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.menu_embeddings_allergy` 
+CLUSTER BY menu_id
+FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v2/Data-Export/menu_embeddings_allergy/menu_embeddings_allergy_*.avro']);
+
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.menu_embeddings_description` 
+CLUSTER BY menu_id
+FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v2/Data-Export/menu_embeddings_description/menu_embeddings_description_*.avro']);
+
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.menu_embeddings_name` 
+CLUSTER BY menu_id
+FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v2/Data-Export/menu_embeddings_name/menu_embeddings_name_*.avro']);
+
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.oracle_customer` 
+CLUSTER BY customer_id
+FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v2/Data-Export/oracle_customer/oracle_customer_*.avro']);
+
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.oracle_ingredients` 
+CLUSTER BY ingredient_id
+FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v2/Data-Export/oracle_ingredients/oracle_ingredients_*.avro']);
+
+LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.oracle_inventory` 
+CLUSTER BY inventory_id
+FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v2/Data-Export/oracle_inventory/oracle_inventory_*.avro']);
 
 
 ------------------------------------------------------------------------------------------------------------

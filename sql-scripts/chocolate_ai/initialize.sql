@@ -36,19 +36,11 @@ Clean up / Reset script:
 ------------------------------------------------------------------------------------------------------------
 -- Create GenAI / Vertex AI connections
 ------------------------------------------------------------------------------------------------------------
-CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocolate_ai_dataset}.gemini_pro`
+CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocolate_ai_dataset}.gemini_model`
   REMOTE WITH CONNECTION `${project_id}.us.vertex-ai`
-  OPTIONS (endpoint = 'gemini-pro');
+  OPTIONS (endpoint = 'gemini-2.0-flash');
 
-CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocolate_ai_dataset}.gemini_pro_1_5`
-  REMOTE WITH CONNECTION `${project_id}.us.vertex-ai`
-  OPTIONS (endpoint = 'gemini-1.5-pro-001');
-
-CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocolate_ai_dataset}.google-textembedding`
-  REMOTE WITH CONNECTION `${project_id}.us.vertex-ai`
-  OPTIONS (endpoint = 'text-embedding-004');
-
-CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocolate_ai_dataset}.google-textembedding-005`
+CREATE MODEL IF NOT EXISTS `${project_id}.${bigquery_chocolate_ai_dataset}.textembedding_model`
   REMOTE WITH CONNECTION `${project_id}.us.vertex-ai`
   OPTIONS (endpoint = 'text-embedding-005');
 
@@ -89,7 +81,7 @@ FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-an
 
 LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.customer_marketing_profile`
 CLUSTER BY customer_id  
-FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v1/Data-Export/customer_marketing_profile/customer_marketing_profile_*.avro']);
+FROM FILES ( format = 'AVRO', enable_logical_types = true, uris = ['gs://data-analytics-golden-demo/chocolate-ai/v2/Data-Export/customer_marketing_profile/customer_marketing_profile_*.avro']);
 
 LOAD DATA OVERWRITE `${project_id}.${bigquery_chocolate_ai_dataset}.customer_review` 
 CLUSTER BY customer_id 
@@ -221,7 +213,6 @@ CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocolate_ai_dataset}.chocolate
           menu_price OPTIONS (DESCRIPTION='Price of the menu item'),
           menu_size OPTIONS (DESCRIPTION='Size of the menu item (e.g., small, medium, large)'),
           menu_description OPTIONS (DESCRIPTION='Description of the menu item'),
-          menu_alergy_info OPTIONS (DESCRIPTION='Allergy information for the menu item'),
           quantity OPTIONS (DESCRIPTION='Quantity of the menu item ordered'),
           item_total OPTIONS (DESCRIPTION='Total price of the item (quantity * menu_price)'),
           item_price OPTIONS (DESCRIPTION='Price of the individual item'), 
@@ -240,7 +231,6 @@ CREATE OR REPLACE VIEW `${project_id}.${bigquery_chocolate_ai_dataset}.chocolate
           menu_price,
           menu_size,
           menu_description,
-          menu_alergy_info,
           quantity,
           item_total,
           item_price,

@@ -60,14 +60,14 @@ data "google_client_config" "current" {
 ####################################################################################
 # UDFs
 ####################################################################################
-resource "google_bigquery_routine" "clean_llmgemini_pro_result_as_json_json" {
+resource "google_bigquery_routine" "clean_llmgemini_model_result_as_json_json" {
   project         = var.project_id
   dataset_id      = var.bigquery_chocolate_ai_dataset
-  routine_id      = "gemini_pro_result_as_json"
+  routine_id      = "gemini_model_result_as_json"
   routine_type    = "SCALAR_FUNCTION"
   language        = "SQL"
 
-  definition_body = templatefile("../sql-scripts/chocolate_ai/gemini_pro_result_as_json.sql", 
+  definition_body = templatefile("../sql-scripts/chocolate_ai/gemini_model_result_as_json.sql", 
   { 
     project_id = var.project_id
     bigquery_chocolate_ai_dataset = var.bigquery_chocolate_ai_dataset
@@ -83,14 +83,14 @@ resource "google_bigquery_routine" "clean_llmgemini_pro_result_as_json_json" {
 }
 
 
-resource "google_bigquery_routine" "gemini_pro_result_as_string" {
+resource "google_bigquery_routine" "gemini_model_result_as_string" {
   project         = var.project_id
   dataset_id      = var.bigquery_chocolate_ai_dataset
-  routine_id      = "gemini_pro_result_as_string"
+  routine_id      = "gemini_model_result_as_string"
   routine_type    = "SCALAR_FUNCTION"
   language        = "SQL"
 
-  definition_body = templatefile("../sql-scripts/chocolate_ai/gemini_pro_result_as_string.sql", 
+  definition_body = templatefile("../sql-scripts/chocolate_ai/gemini_model_result_as_string.sql", 
   { 
     project_id = var.project_id
     bigquery_chocolate_ai_dataset = var.bigquery_chocolate_ai_dataset

@@ -1,3 +1,8 @@
+# Data to AI Retail Lab
+This repo is composed of assets from chocoloate ai and BQ data agents. A subset of the technical components will be shown at the retail event.
+
+---
+
 # Chocolate AI: Revolutionizing Marketing with Data Analytics and GenAI
 
 Welcome to Chocolate AI, a cutting-edge demonstration of how Generative AI can revolutionize marketing on Google Cloud.  This project showcases the power of BigQuery, Gemini, Spanner and Vertex AI, transforming data analytics into a creative powerhouse. Explore our interactive web frontend demo (contact your account team or customer engineer for access) and dive into the backend code provided here.

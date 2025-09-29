@@ -1,0 +1,119 @@
+# 🌥️ cloudbuild.yaml
+# This file defines a streamlined CI/CD pipeline for the Data Agent,
+# including placeholder testing steps and automated OAuth setup.
+
+steps:
+  # Dummy Unit Test Step (Pre-Build)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    dir: "agents"
+    id: 'Unit Test'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "✅ Placeholder for Unit Tests..."
+
+  # New Step: Setup Agentspace Authorization
+  # This step runs before the main deployment to ensure the OAuth config is ready.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    dir: "agents"
+    id: 'Setup Agentspace Authorization'
+    entrypoint: 'bash'
+    secretEnv: ['OAUTH_CLIENT_SECRET']
+    args:
+      - '-c'
+      - |
+        set -e
+        # Add set +x to ensure that commands are not echoed to the logs, protecting the secret.
+        set +x
+        echo "🔐 Running Agentspace Authorization setup..."
+        chmod +x scripts/agentspace_auth.sh
+        bash scripts/agentspace_auth.sh
+        echo "✅ Authorization setup complete."
+    env:
+      - 'PROJECT_ID=$_PROJECT_ID'
+      - 'AUTH_LOCATION=$_AUTH_LOCATION'
+      - 'AUTH_ID=$_AUTH_ID'
+      - 'OAUTH_CLIENT_ID=$_OAUTH_CLIENT_ID'
+
+  # Main Install, Build, and Deploy Step
+  # This step now uses the original python:3.12 image.
+  - name: 'python:3.12'
+    dir: "agents"
+    id: 'Install, Build, and Deploy'
+    entrypoint: 'bash'
+    # The 'secrets' block makes the OAuth secret available to the python script if needed,
+    # though it's primarily used by the auth step.
+    secretEnv: ['OAUTH_CLIENT_SECRET']
+    args:
+      - '-c'
+      - |
+        set -e # Exit immediately if a command fails
+
+        echo "📦 Installing Python Dependencies... (This might take a moment)"
+        pip install -r requirements.txt --user -q
+
+        echo "✅ Granting execute permissions to our script..."
+        chmod +x scripts/cloud_build_deploy.sh
+        
+        echo "🚀 Starting the deployment script..."
+        export PATH="/builder/home/.local/bin:$$PATH"
+        ./scripts/cloud_build_deploy.sh
+    env:
+      # Pass substitution variables from the trigger to the deployment script's environment.
+      - 'MODEL=$_MODEL'
+      - 'PROJECT_ID=$_PROJECT_ID'
+      - 'PROJECT_NUMBER=$_PROJECT_NUMBER'
+      - 'BQ_LOCATION=$_BQ_LOCATION'
+      - 'AE_LOCATION=$_AE_LOCATION'
+      - 'AUTH_LOCATION=$_AUTH_LOCATION'
+      - 'DATASET_NAME=$_DATASET_NAME'
+      - 'TABLE_NAMES=$_TABLE_NAMES'
+      - 'DISPLAY_NAME=$_DISPLAY_NAME'
+      - 'AGENTSPACE_ID=$_AGENTSPACE_ID'
+      - 'AGENT_DESCRIPTION=$_AGENT_DESCRIPTION'
+      - 'FEW_SHOT_EXAMPLES_TABLE_FULL_ID=$_FEW_SHOT_EXAMPLES_TABLE_FULL_ID'
+      - 'AUTH_ID=$_AUTH_ID'
+      - 'OAUTH_CLIENT_ID=$_OAUTH_CLIENT_ID'
+
+  # Dummy Functional Test Step (Post-Deployment)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    dir: "agents"
+    id: 'Functional Test'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "✅ Placeholder for Functional/Integration Tests..."
+
+# Define substitution variables with default values.
+# These can be overridden when running the Cloud Build trigger.
+substitutions:
+  _MODEL: 'gemini-2.5-pro'
+  _PROJECT_ID: '$PROJECT_ID'
+  _PROJECT_NUMBER: '$PROJECT_NUMBER'
+  _BQ_LOCATION: 'US'
+  _AE_LOCATION: 'us-central1'
+  _AUTH_LOCATION: 'global'
+  _DATASET_NAME: 'ga4_dataset'
+  _TABLE_NAMES: ''
+  _DISPLAY_NAME: 'CEM_Data_Agent'
+  _AGENTSPACE_ID: 'bq-agent_1756327296678' # IMPORTANT: This must be provided when running the trigger
+  _AGENT_DESCRIPTION: 'An amzing data agent.'
+  _FEW_SHOT_EXAMPLES_TABLE_FULL_ID: '' # Optional
+  _AUTH_ID: 'agent-auth'
+  _OAUTH_CLIENT_ID: '991395937688-emt4tuqjl0995bffueqmq5ucqmle35f8.apps.googleusercontent.com'
+
+# Specify the service account for the build.
+serviceAccount: '991395937688-compute@developer.gserviceaccount.com'
+
+# Define the secret to be used in the build.
+# The 'OAUTH_CLIENT_SECRET' env var will be populated from the secret manager.
+availableSecrets:
+  secretManager:
+  - versionName: projects/$PROJECT_ID/secrets/OAUTH_CLIENT_SECRET/versions/latest
+    env: 'OAUTH_CLIENT_SECRET'
+
+# Configure build options.
+options:
+  logging: CLOUD_LOGGING_ONLY

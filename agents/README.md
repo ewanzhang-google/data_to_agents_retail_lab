@@ -1,3 +1,8 @@
+# Data to AI Retail Lab
+This repo is composed of assets from chocoloate ai and BQ data agents. A subset of the technical components will be shown at the retail event.
+
+---
+
 # BigQuery Data Agent
 
 ![](assets/archi.png)

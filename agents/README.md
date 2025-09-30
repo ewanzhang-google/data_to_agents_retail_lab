@@ -8,17 +8,6 @@ It can be configured to point to different BigQuery datasets, making it a reusab
 
 ---
 
-## Project Owners
-
-Please reach out to the team below if you have any questions:
-
-- [Aishwarya Prabhat](https://moma.corp.google.com/person/aishprabhat)
-- [Seonhwa (Sona) Hwang](https://moma.corp.google.com/person/seonhwah)
-- [Sudipto Guha](https://moma.corp.google.com/person/sudiptoguha)
-- [Dharini Chandrashekhar](https://moma.corp.google.com/person/dharinic)
-
----
-
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [How It Works](#how-it-works)
@@ -211,18 +200,6 @@ Detailed data characteristics enhance the agent's analytical capabilities.
 **What:** This involves providing **data profile results**, such as column statistics, value distributions, distinct values, row counts, table sizes, and data patterns. This allows the agent to understand the nature and quality of the data it's working with.
 
 **How:** This information is obtained from **BigQuery Data Profiles**, which automatically generate detailed insights into the characteristics of your datasets.
-
-**Datasets available to use with the BQ-Data Agent**
-
-| Domain | Link | Description | |
-| :---- | :---- | :---- | :---- |
-| Telco | [Link](https://drive.google.com/drive/folders/1AeB3i0tg3DR9TwrOio5YoWrTV0Xntd5w?usp=drive_link) | |
-| Ecommerce | [Link](https://console.cloud.google.com/bigquery/analytics-hub/discovery/projects/1057666841514/locations/us/dataExchanges/google_cloud_public_datasets_17e74966199/listings/thelook_ecommerce) | TheLook is a fictitious eCommerce clothing site developed by the Looker team. The dataset contains information about customers, products, orders, logistics, web events and digital marketing campaigns. | |
-| Consumer goods (Coffee chain) | (Search for Data Beans on Analytics hub)  | Databeans: Data for the Data Beans fictitious company of coffee trucks. This dataset contains information about a coffee business, encompassing various aspects of its operations. It includes details about locations, cities, and their addresses, as well as historical location data. The dataset also provides information about coffee farms, processors, and roasters, including their contact details and geographic locations. Furthermore, it stores menu information, customer details, order history, and customer feedback. This data can be used to analyze sales trends, customer behavior, supply chain logistics, and identify areas for business improvement. | |
-| FSI | [Link](https://gitlab.com/google-cloud-ce/googlers/pkeny/customer-insights-platform/-/tree/main/business-performance-dashboards/tables?ref_type=heads) | This dataset provides a comprehensive view of user interactions, advertising campaigns, and customer information. It includes details on website events, user demographics, and advertising performance. Loan data is also captured, providing insights into loan terms and financial status. Customer attributes such as churn score and lifetime value are recorded, enabling personalized customer experiences. The dataset supports analysis of user behavior, campaign effectiveness, and customer segmentation, and can be used to optimize marketing strategies and improve customer retention. | |
-| Google Analytics | bigquery-public-data.ga4\_obfuscated\_sample\_ecommerce | Obfuscated Google Analytics 4 data emulating a web ecommerce implementation of Google Analytics. It’s a great way to look at business data and experiment and learn the benefits of analyzing Google Analytics data in BigQuery. Learn more at: [Link](https://developers.google.com/analytics/bigquery/web-ecommerce-demo-dataset) | |
-| SFDC | Coming soon\! | | |
-
 ---
 
 ## Enabling Authorization (OAuth 2.0)
@@ -261,38 +238,6 @@ This is typically run automatically by Cloud Build. However, to run it manually:
 
 ### Step 3: Configure the Agent to Use Auth
 Finally, ensure the agent's configuration points to the authorization you just registered. This is handled automatically by the Cloud Build substitution variables or the `_config.sh` files.
-
----
-
-## Running the Agent Locally (for Testing)
-This method is for quick testing and debugging on your local machine. It uses the ADK web server to provide an interface for interacting with your agent. It does not deploy the agent to the cloud.
-
-1.  **Configure a Test Agent**:
-    * Open a configuration file like `agent_configs/cem_config.sh`.
-    * Fill in the environment variables with your GCP project details and the target BigQuery dataset you want to test against.
-
-2.  **Create a Environment**:
-    * Create and activate a virtual environment.
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-    * Install dependencies.
-    ```bash
-    pip install -r requirements.txt
-    ```
-    * Create a .env file with the following variables.
-    ```bash
-    export GOOGLE_API_KEY=
-    export GOOGLE_GENAI_USE_VERTEXAI=0
-    ```
-    
-3.  **Run the Local Server**:
-    * The `run_local.sh` script sources the variables from your chosen config file and starts the ADK web server.
-    ```bash
-    bash scripts/run_local.sh agent_configs/cem_config.sh
-    ```
-    * This will launch a web interface where you can chat with your agent and see its responses in real-time.
 
 ---
 
@@ -376,19 +321,6 @@ gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:your-email
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:your-email@example.com" --role="roles/iam.serviceAccountUser"
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:your-email@example.com" --role="roles/aiplatform.admin"
 ```
-
-#### **Manual Deployment Steps**
-1.  **Set up Virtual Environment and Install Dependencies**.
-2.  **Configure your Agent** in the `agent_configs/` directory.
-3.  **Handle the OAuth Secret (IMPORTANT!)**: **Do not hardcode secrets.** Export it into your terminal session before you deploy:
-    ```bash
-    export OAUTH_CLIENT_SECRET="GOCSPX-..."
-    ```
-4.  **Run the Deployment Script**: The `deploy.sh` script handles all actions.
-    -   Create & Register: `bash scripts/deploy.sh agent_configs/cem_config.sh create register`
-    -   Create Only: `bash scripts/deploy.sh agent_configs/cem_config.sh create`
-    -   Register an Existing Agent: `bash scripts/deploy.sh agent_configs/cem_config.sh register "projects/..."`
-    -   Delete: `bash scripts/deploy.sh agent_configs/cem_config.sh delete "projects/..."`
 
 ---
 

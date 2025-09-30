@@ -4,6 +4,9 @@ This repo is composed of assets from chocoloate ai and BQ data agents. A subset 
 [Chocoloate AI]:
 * solution deployment
 * chosen notebooks
+1.Campaign Customer Segmentation
+2.Campaign Recommendations
+3.Synthetic Data Generation: Customer Reviews
 
 [BQ Agents]:
 * solution deployment
